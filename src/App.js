@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from 'react';
+import "../src/firebase";
 import './App.css';
 import Left from './Component/left';
 import Right from './Component/Right';
@@ -97,7 +98,6 @@ function App() {
             if(allmessageData.length>0){
               update_localdb({id:id,message:allmessageData});
             }
-
           })
         }else{
           const openingcursor = store.openCursor();
@@ -216,7 +216,7 @@ function App() {
   }
 
   return (
-    <div className={`App flex flex-row w-full h-[100vh]`}>
+    <div className="flex flex-row w-full h-screen">
       <Left setShow={setShow} show={show}/>
       <Right setShow={setShow}/>
     </div>

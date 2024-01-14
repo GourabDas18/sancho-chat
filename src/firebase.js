@@ -3,7 +3,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { doc, getFirestore, updateDoc } from "firebase/firestore";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, isSupported, onMessage } from "firebase/messaging";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -23,7 +23,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const messaging = getMessaging(app);
+export const messaging = isSupported() ? getMessaging(app) : null;
 export const onMessageListener = () =>
   new Promise((resolve) => {
     onMessage(messaging, (payload) => {
@@ -40,3 +40,10 @@ function requestPermission() {
     }})};
 
 requestPermission();
+
+// TypeError: undefined is not an object (evaluating 'navigator.serviceWorker.addEventListener')
+// getImmediate @ main.8f831d26.js:3
+// (anonymous) @ main.8f831d26.js:3
+// (anonymous) @ main.8f831d26.js:3
+// global code @ main.8f831d26.js:3
+// main.8f831d26.js:3 Unhandled Promise Rejection: FirebaseError: Messaging: This browser doesn't support the API's required to use the Firebase SDK. (messaging/unsupported-browser).

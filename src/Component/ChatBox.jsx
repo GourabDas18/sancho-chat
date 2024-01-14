@@ -123,12 +123,12 @@ const ChatBox = (props) => {
     }
 
     return (
-        <div className="w-full min-h-screen max-h-screen">
+        <div className={`w-full h-full`}>
             {Object.keys(current_select_chat).length > 0
                 ? <>
                     <section className="flex flex-row items-center w-full bg-slate-900">
                         <span onClick={() => { props.setShow(false) }}><i className="fi fi-br-angle-small-left text-md text-slate-400 m-2 hidden md:block"></i></span>
-                        <section className=" w-full min-h-[8vh] max-h-[8vh] flex flex-row justify-between items-center px-2 py-4" >
+                        <section className=" w-full min-h-[8%] max-h-[8%] flex flex-row justify-between items-center px-2 py-4" >
                             <span className="flex flex-col items-center gap-1 w-[95%]">
                                 <span className="text-sm font-semibold text-slate-200">{current_select_chat.name}</span>
                                 <span className="text-xs text-slate-400">
@@ -140,8 +140,8 @@ const ChatBox = (props) => {
                         </section>
                     </section>
 
-                    <section className="min-h-[90vh]">
-                        <span className=" flex flex-col-reverse items-end min-h-[85vh] max-h-[85vh] overflow-x-hidden w-full p-4 ">
+                    <section className={"h-full"}>
+                        <section className={` flex flex-col-reverse items-end min-h-[86%] max-h-[86%] overflow-x-hidden w-full p-4 `}>
                             {chat.map((each_chat, i) => {
                                 return <>
                                     {i !== chat.length - 1 && i !== 0 && date_divider(chat[i - 1].time, chat[i].time)}
@@ -171,8 +171,8 @@ const ChatBox = (props) => {
                                         </section>}
                                 </>
                             })}
-                        </span>
-                        <span className="flex flex-row justify-evenly items-center min-h-[7vh] max-h-[7vh] ">
+                        </section>
+                        <span className="flex flex-row justify-evenly items-center min-h-[5%] max-h-[5%] ">
                             <i className="fi fi fi-rs-grin text-lg w-10 h-10 p-2 flex justify-center items-center bg-rose-600 text-white rounded-full md:hidden"></i>
                             <input type="text" className="w-4/5 h-10 pl-2.5 bg-white border-0 focus:outline-0 rounded-full" placeholder="hi !! enter your message ." value={message} onChange={(e) => { setMessage(e.target.value) }} />
                             <span onClick={() => { sendMessage() }}><i className="fi fi-rs-paper-plane text-lg w-10 h-10 p-2 flex justify-center items-center bg-sky-900 text-white rounded-full"></i></span>

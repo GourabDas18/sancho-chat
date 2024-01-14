@@ -59,9 +59,9 @@ const Left = (props) => {
     }
 
     return (
-        <div className={`flex flex-col w-[35%] md:w-screen z-10 md:absolute bg-slate-800 min-h-screen ${props.show==false?"md:translate-x-0":"md:translate-x-full"}`}>
-            <div className="flex flex-row h-screen">
-                <section className="flex w-20 h-screen bg-slate-950 text-white flex-col justify-between items-center py-4">
+        <div className={`flex flex-col w-[35%] md:w-screen z-10 md:absolute bg-slate-800 h-full ${props.show==false?"md:translate-x-0":"md:translate-x-full"}`}>
+            <div className="flex flex-row h-full">
+                <section className="flex w-20 h-full bg-slate-950 text-white flex-col justify-between items-center py-4">
                     {Object.keys(user).length === 0 ?
                         <span className="w-12 h-12 bg-slate-700 rounded-full flex justify-center items-center border-2 border-green-500 cursor-pointer">
                             <i className="fi fi-rr-user text-slate-400" onClick={() => { user_login() }}></i>
