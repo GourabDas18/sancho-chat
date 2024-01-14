@@ -4,7 +4,7 @@ import "../src/firebase";
 import './App.css';
 import Left from './Component/left';
 import Right from './Component/Right';
-import { auth, db } from './firebase';
+import { auth, db,messaging,onMessageListener } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, limit, onSnapshot, query, updateDoc, orderBy, where } from 'firebase/firestore';
 import { useDispatch, useSelector } from 'react-redux';
@@ -156,7 +156,7 @@ function App() {
       }
     } 
   }
-  useEffect(()=>{setHeight(window.innerHeight)},[window.innerHeight])
+  useEffect(()=>{setHeight(window.innerHeight);},[window.innerHeight])
   useEffect(()=>{
     
     onAuthStateChanged(auth,(user)=>{
@@ -166,12 +166,16 @@ function App() {
           dispatch(setUser(snapshot.data()));
           setChatList([...snapshot.data().chatlist]);
           var fcm_tokenlist = snapshot.data().fcm_token;
-            // getToken(messaging).then(token=>{
-            //   let tokenlist= [...new Set([...fcm_tokenlist,token])];
-            //   updateDoc(doc(db,"users",user.uid),{
-            //     fcm_token:tokenlist
-            //   })
-            // }).catch(error=>console.log("error ----",error))
+try {
+  getToken(messaging).then(token=>{
+    let tokenlist= [...new Set([...fcm_tokenlist,token])];
+    updateDoc(doc(db,"users",user.uid),{
+      fcm_token:tokenlist
+    })
+  }).catch(error=>console.log("error ----",error))
+} catch (error) {
+  console.log(error)
+}
         });
         onSnapshot(query(collection(db,"users"),limit(20)),(snapshot)=>{
           var users=[];
@@ -208,16 +212,17 @@ function App() {
     }
   }
 
-  // onMessageListener().then(payload => {
-  //  let notification = new Notification(payload.notification.title,{body:payload.notification.body})
-  //   notification.show();
-  //   console.log(payload);
-  // }).catch(err => console.log('failed: ', err));
+  onMessageListener().then(payload => {
+   let notification = new Notification(payload.notification.title,{body:payload.notification.body})
+    notification.show();
+    console.log(payload);
+  }).catch(err => console.log('failed: ', err));
 
 
 
   return (
-    <div className={`flex flex-row`} style={{height:height+"px"}}>
+    
+    <div className={`App flex flex-row md:flex-col`} style={{height:height+"px"}}>
       <Left setShow={setShow} show={show}/>
       <Right setShow={setShow}/>
     </div>

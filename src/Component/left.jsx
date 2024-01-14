@@ -59,7 +59,7 @@ const Left = (props) => {
     }
 
     return (
-        <div className={`flex flex-col w-[35%] md:w-screen z-10 md:absolute bg-slate-800 h-full ${props.show==false?"md:translate-x-0":"md:translate-x-full"}`}>
+        <div className={`flex flex-col w-[35%] md:w-screen z-10 md:relative bg-slate-800 min-h-full ${props.show==false?"md:translate-x-0":"md:translate-x-full"}`}>
             <div className="flex flex-row h-full">
                 <section className="flex w-20 h-full bg-slate-950 text-white flex-col justify-between items-center py-4">
                     {Object.keys(user).length === 0 ?

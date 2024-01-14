@@ -61,9 +61,9 @@ const Menu_home=(props)=>{
             
             </>
             :<>
-            <div>
+            <div className="flex flex-col items-center">
             <span className="text-slate-200">No User</span>
-            <div className="text-slate-300 my-20 flex flex-col gap-3 p-14 bg-slate-950">
+            <div className="text-slate-300 my-20 flex flex-col items-center gap-3 p-14 bg-slate-950">
             Please
             <button className="bg-slate-300 text-slate-600 mx-3 w-20 h-8" onClick={()=>{user_login()}}>Log In</button>
             and continue.
