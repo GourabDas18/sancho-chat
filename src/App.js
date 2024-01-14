@@ -4,7 +4,7 @@ import "../src/firebase";
 import './App.css';
 import Left from './Component/left';
 import Right from './Component/Right';
-import { auth, db, messaging, onMessageListener } from './firebase';
+import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, limit, onSnapshot, query, updateDoc, orderBy, where } from 'firebase/firestore';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,65 +16,7 @@ function App() {
   const [chatList,setChatList]=useState([]);
   const [listening_chatList,setlistening_ChatList]=useState([]);
   const[show,setShow]=useState(false);
-  useEffect(()=>{
-    
-    onAuthStateChanged(auth,(user)=>{
-      if(user){
-        console.log(user)
-        onSnapshot(doc(db,"users",user.uid),snapshot=>{
-          dispatch(setUser(snapshot.data()));
-          setChatList([...snapshot.data().chatlist]);
-          var fcm_tokenlist = snapshot.data().fcm_token;
-            getToken(messaging).then(token=>{
-              let tokenlist= [...new Set([...fcm_tokenlist,token])];
-              updateDoc(doc(db,"users",user.uid),{
-                fcm_token:tokenlist
-              })
-            }).catch(error=>console.log("error ----",error))
-        });
-        onSnapshot(query(collection(db,"users"),limit(20)),(snapshot)=>{
-          var users=[];
-          snapshot.forEach(user=>{
-            users.push(user.data());
-          });
-          dispatch(set_available_user([...users.filter(eachuser=>eachuser.id!==user.uid)]))
-        })
-     }
-    })
-  },[auth])
-
-  
-
-  useEffect(()=>{
-    let remaining_chats = [...chatList.filter(chat=>listening_chatList.indexOf(chat)===-1)];
-    remaining_chats.forEach(id=>{
-      localstorage_chat_save(id)
-      setlistening_ChatList([...listening_chatList,id])
-    })
-  },[chatList,auth])
-
-  window.onblur=()=>{
-    if(Object.keys(user).length>0){
-      updateDoc(doc(db,"users",user.id),{
-        active_status : new Date().getTime().toString()
-      })
-    }
-  }
-
-  window.onfocus=()=>{
-    if(Object.keys(user).length>0){
-      updateDoc(doc(db,"users",user.id),{
-        active_status : "active"
-      })
-    }
-  }
-
-  onMessageListener().then(payload => {
-   let notification = new Notification(payload.notification.title,{body:payload.notification.body})
-    notification.show();
-    console.log(payload);
-  }).catch(err => console.log('failed: ', err));
-
+  const [height,setHeight]=useState(window.innerHeight);
   const localstorage_chat_save=(id)=>{
     const idb = window.indexedDB;
     const reqest = idb.open("chatroom",2);
@@ -214,9 +156,68 @@ function App() {
       }
     } 
   }
+  useEffect(()=>{setHeight(window.innerHeight)},[window.innerHeight])
+  useEffect(()=>{
+    
+    onAuthStateChanged(auth,(user)=>{
+      if(user){
+        console.log(user)
+        onSnapshot(doc(db,"users",user.uid),snapshot=>{
+          dispatch(setUser(snapshot.data()));
+          setChatList([...snapshot.data().chatlist]);
+          var fcm_tokenlist = snapshot.data().fcm_token;
+            // getToken(messaging).then(token=>{
+            //   let tokenlist= [...new Set([...fcm_tokenlist,token])];
+            //   updateDoc(doc(db,"users",user.uid),{
+            //     fcm_token:tokenlist
+            //   })
+            // }).catch(error=>console.log("error ----",error))
+        });
+        onSnapshot(query(collection(db,"users"),limit(20)),(snapshot)=>{
+          var users=[];
+          snapshot.forEach(user=>{
+            users.push(user.data());
+          });
+          dispatch(set_available_user([...users.filter(eachuser=>eachuser.id!==user.uid)]))
+        })
+     }
+    })
+  },[auth,dispatch])
+
+  useEffect(()=>{
+    let remaining_chats = [...chatList.filter(chat=>listening_chatList.indexOf(chat)===-1)];
+    remaining_chats.forEach(id=>{
+      localstorage_chat_save(id)
+      setlistening_ChatList([...listening_chatList,id])
+    })
+  },[chatList,auth,localstorage_chat_save])
+
+  window.onblur=()=>{
+    if(Object.keys(user).length>0){
+      updateDoc(doc(db,"users",user.id),{
+        active_status : new Date().getTime().toString()
+      })
+    }
+  }
+
+  window.onfocus=()=>{
+    if(Object.keys(user).length>0){
+      updateDoc(doc(db,"users",user.id),{
+        active_status : "active"
+      })
+    }
+  }
+
+  // onMessageListener().then(payload => {
+  //  let notification = new Notification(payload.notification.title,{body:payload.notification.body})
+  //   notification.show();
+  //   console.log(payload);
+  // }).catch(err => console.log('failed: ', err));
+
+
 
   return (
-    <div className="flex flex-row w-full h-screen">
+    <div className={`flex flex-row`} style={{height:height+"px"}}>
       <Left setShow={setShow} show={show}/>
       <Right setShow={setShow}/>
     </div>
