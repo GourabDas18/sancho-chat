@@ -194,7 +194,7 @@ try {
       localstorage_chat_save(id)
       setlistening_ChatList([...listening_chatList,id])
     })
-  },[chatList,auth,localstorage_chat_save])
+  },[chatList,auth])
 
   window.onblur=()=>{
     if(Object.keys(user).length>0){
