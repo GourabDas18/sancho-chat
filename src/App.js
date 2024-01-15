@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import "../src/firebase";
 import './App.css';
 import Left from './Component/left';
@@ -211,6 +211,10 @@ try {
       })
     }
   }
+
+  window.onresize=useCallback(()=>{
+    setHeight(window.innerHeight)
+  },[setHeight])
 
   onMessageListener().then(payload => {
    let notification = new Notification(payload.notification.title,{body:payload.notification.body})
