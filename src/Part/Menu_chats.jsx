@@ -12,13 +12,25 @@ const Menu_chats = (props) => {
     const [search, setSearch] = useState("");
     const dispatch = useDispatch();
     const new_message_count= useCallback((list,i)=>{
-        if(list[list.length-i]!== undefined){
-            if(list[list.length-i].seen===false && list[list.length-i].sentBy!==mydetails.id){
-                i++;
-                new_message_count(list,i)
+        var unseen_no=0;
+        var last_unseen="";
+        var last_unseen_set=false;
+        var i =x.length-1;
+        while (i>=0) {
+            console.log("i jacche",i)
+            if(i>0){
+                if(x[i].b==false){
+                    if(!last_unseen_set){
+                        last_unseen_set=true;
+                        last_unseen=x[i].a;
+                    };
+                    unseen_no++;
+                    i--;
+                }else{
+                    return unseen_no;
+                }
             }
         }
-        return i-1;
     },[])
     useEffect(() => {
         let chat_collection = [];

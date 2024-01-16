@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { db, messaging } from "../firebase";
 const ChatBox = (props) => {
     const current_select_chat = useSelector(state => state.selected_chat);
+    const [current_select_chat_id,setCurrent_select_chat_id]=useState("");
     const user = useSelector(state => state.user);
     const [message, setMessage] = useState("");
     const messageList = useSelector(state => state.message_list)
@@ -13,8 +14,10 @@ const ChatBox = (props) => {
         var id1 = user.id + current_select_chat.id;
         var id2 = current_select_chat.id + user.id;
         if (user.chatlist.indexOf(id1) !== -1) {
+            setCurrent_select_chat_id(id1);
             return { status: true, id: id1 };
         } else if (user.chatlist.indexOf(id2) !== -1) {
+            setCurrent_select_chat_id(id2);
             return { status: true, id: id2 };
         }
         else {
@@ -38,7 +41,7 @@ const ChatBox = (props) => {
                 current_select_chat.fcm_token.forEach(id => {
                     let bodyData = { "name": user.name.toString(), "message": message.toString(), "id": id };
                     var xmlrequest = new XMLHttpRequest();
-                    xmlrequest.open("post", "https://sancho-chat-server.onrender.com/");
+                    xmlrequest.open("post", "https://sancho-chat-server.onrender.com/send");
                     xmlrequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
                     try {
                         xmlrequest.send(JSON.stringify(bodyData));
@@ -79,7 +82,7 @@ const ChatBox = (props) => {
                 let bodyData = { "name": user.name.toString(), "message": message.toString(), "id": current_select_chat.fcm_token.toString() };
                 if (user.fcm_token !== "" && current_select_chat.fcm_token !== "") {
                     var xmlrequest = new XMLHttpRequest();
-                    xmlrequest.open("post", "https://sancho-chat-server.onrender.com/");
+                    xmlrequest.open("post", "https://sancho-chat-server.onrender.com/send");
                     xmlrequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
                     try {
                         xmlrequest.send(JSON.stringify(bodyData));
@@ -93,6 +96,8 @@ const ChatBox = (props) => {
     }
 
     useEffect(() => {
+        var check = chatlist_check();
+        updateDoc(doc(db,"users",user.id),{current_select_chat:current_select_chat_id}).catch(error=>{}).then(()=>{})
         setChat([]);
         setMessage([]);
         messageList.forEach(item => {
@@ -110,16 +115,41 @@ const ChatBox = (props) => {
                 })
             }
         })
-    }, [current_select_chat, messageList])
+    }, [current_select_chat])
+
+    useEffect(()=>{
+        messageList.forEach(item => {
+            if (item.id === current_select_chat.id + user.id || item.id === user.id + current_select_chat.id) {
+                setChat([...item.message].reverse());
+                chat.forEach(each_chat => {
+                    if (each_chat.seen === false && each_chat.sentBy !== user.id) {
+                        try {
+                            updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
+                        } catch (error) {
+                            console.log(error)
+                        }
+
+                    }
+                })
+            }
+        })
+    },[messageList])
 
     const date_divider = (date1, date2) => {
         const time1 = new Date(date1).toLocaleDateString();
         const time2 = new Date(date2).toLocaleDateString();
         if (time2 !== time1) {
-            return <div className="w-full p-4 py-8"><span className="px-4 py-2 bg-slate-950 text-slate-500 text-xs">{time1}</span></div>
+            return <div className="w-full p-4 py-8 flex justify-center"><span className="px-4 py-2 bg-slate-950 text-slate-500 text-xs">{time1}</span></div>
         } else {
             return <></>
         }
+    }
+
+    const user_typing=()=>{
+        updateDoc(doc(db,"users",user.id),{typing:true}).catch(error=>{}).then(()=>{})
+    }
+    const user_not_typing=()=>{
+        updateDoc(doc(db,"users",user.id),{typing:false}).catch(error=>{}).then(()=>{})
     }
 
     return (
@@ -132,7 +162,11 @@ const ChatBox = (props) => {
                             <span className="flex flex-col items-center gap-1 w-[95%]">
                                 <span className="text-sm font-semibold text-slate-200">{current_select_chat.name}</span>
                                 <span className="text-xs text-slate-400">
-                                    {current_select_chat.last_seen === "active" ? "Active Now" : ` Last seen : ${new Date().toLocaleDateString() === new Date(current_select_chat.last_seen).toLocaleDateString() ? new Date(parseInt(current_select_chat.last_seen)).toLocaleDateString() : new Date(parseInt(current_select_chat.last_seen)).toLocaleTimeString()}`}
+                                    {current_select_chat.typing===true && current_select_chat.current_select_chat_id===current_select_chat_id?
+                                <>{current_select_chat.last_seen === "active" ? "typing..." : ` Last seen : ${new Date().toLocaleDateString() === new Date(current_select_chat.last_seen).toLocaleDateString() ? new Date(parseInt(current_select_chat.last_seen)).toLocaleDateString() : new Date(parseInt(current_select_chat.last_seen)).toLocaleTimeString()}`}</>
+                                :<>{current_select_chat.last_seen === "active" ? "Active Now" : ` Last seen : ${new Date().toLocaleDateString() === new Date(current_select_chat.last_seen).toLocaleDateString() ? new Date(parseInt(current_select_chat.last_seen)).toLocaleDateString() : new Date(parseInt(current_select_chat.last_seen)).toLocaleTimeString()}`}</>    
+                                }
+                                    
                                 </span>
                             </span>
                             <section className="w-8 h-8 rounded-full bg-cover flex bg-slate-700" style={{ backgroundImage: `url(${current_select_chat.image})` }}></section>
@@ -174,8 +208,8 @@ const ChatBox = (props) => {
                         </section>
                         <span className="flex flex-row justify-evenly items-center min-h-[5%] max-h-[5%] ">
                             <i className="fi fi fi-rs-grin text-lg w-10 h-10 p-2 flex justify-center items-center bg-rose-600 text-white rounded-full md:hidden"></i>
-                            <input type="text" className="w-4/5 h-10 pl-2.5 bg-white border-0 focus:outline-0 rounded-full" placeholder="hi !! enter your message ." value={message} onChange={(e) => { setMessage(e.target.value) }} />
-                            <span onClick={() => { sendMessage() }}><i className="fi fi-rs-paper-plane text-lg w-10 h-10 p-2 flex justify-center items-center bg-sky-900 text-white rounded-full"></i></span>
+                            <input type="text" className="w-4/5 h-10 pl-2.5 bg-white border-0 focus:outline-0 rounded-full" placeholder="hi !! enter your message ." value={message} onChange={(e) => { setMessage(e.target.value) }} onFocus={()=>{user_typing()}} onBlur={()=>{user_not_typing()}}/>
+                            <span onClick={() => { if(message!==""){sendMessage()} }} onKeyUp={(e)=>{if(e.keyCode===13 && message!==""){sendMessage()}}}><i className="fi fi-rs-paper-plane text-lg w-10 h-10 p-2 flex justify-center items-center bg-sky-900 text-white rounded-full"></i></span>
                         </span>
                     </section>
                 </>
