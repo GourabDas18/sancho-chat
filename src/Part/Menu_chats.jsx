@@ -15,21 +15,18 @@ const Menu_chats = (props) => {
         var unseen_no=0;
         var last_unseen="";
         var last_unseen_set=false;
-        var i =x.length-1;
+        var i =list.length-1;
         while (i>=0) {
-            console.log("i jacche",i)
-            if(i>0){
-                if(x[i].b==false){
-                    if(!last_unseen_set){
-                        last_unseen_set=true;
-                        last_unseen=x[i].a;
-                    };
-                    unseen_no++;
-                    i--;
-                }else{
-                    return unseen_no;
-                }
+            if(list[i].b==false){
+                if(!last_unseen_set){
+                    last_unseen_set=true;
+                    last_unseen=list[i].a;
+                };
+                unseen_no++;
+            }else{
+                return unseen_no;
             }
+            i--;
         }
     },[])
     useEffect(() => {

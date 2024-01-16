@@ -96,25 +96,27 @@ const ChatBox = (props) => {
     }
 
     useEffect(() => {
-        var check = chatlist_check();
-        updateDoc(doc(db,"users",user.id),{current_select_chat:current_select_chat_id}).catch(error=>{}).then(()=>{})
-        setChat([]);
-        setMessage([]);
-        messageList.forEach(item => {
-            if (item.id === current_select_chat.id + user.id || item.id === user.id + current_select_chat.id) {
-                setChat([...item.message].reverse());
-                chat.forEach(each_chat => {
-                    if (each_chat.seen === false && each_chat.sentBy !== user.id) {
-                        try {
-                            updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
-                        } catch (error) {
-                            console.log(error)
+        if(Object.keys(user).length>0){
+            var check = chatlist_check();
+            updateDoc(doc(db,"users",user.id),{current_select_chat:current_select_chat_id}).catch(error=>{}).then(()=>{})
+            setChat([]);
+            setMessage([]);
+            messageList.forEach(item => {
+                if (item.id === current_select_chat.id + user.id || item.id === user.id + current_select_chat.id) {
+                    setChat([...item.message].reverse());
+                    chat.forEach(each_chat => {
+                        if (each_chat.seen === false && each_chat.sentBy !== user.id) {
+                            try {
+                                updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
+                            } catch (error) {
+                                console.log(error)
+                            }
+    
                         }
-
-                    }
-                })
-            }
-        })
+                    })
+                }
+            })
+        }
     }, [current_select_chat])
 
     useEffect(()=>{

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { set_selected_chat } from "../Redux/storeSlice";
 import { auth, db } from "../firebase";
 import { GoogleAuthProvider,signInWithPopup } from "firebase/auth";
-import { setDoc,doc } from "firebase/firestore";
+import { setDoc,doc, getDoc } from "firebase/firestore";
 import { setUser } from "../Redux/storeSlice";
 
 const Menu_home=(props)=>{
@@ -34,9 +34,16 @@ const Menu_home=(props)=>{
    const user_login = useCallback(async () => {
     signInWithPopup(auth, provider).then((credential) => {
         var login_detail = { id: credential.user.uid, name: credential.user.displayName, mail: credential.user.email, chatlist: [], image: credential.user.photoURL, active_status: "active",fcm_token:"" }
-        setDoc(doc(db, "users", credential.user.uid), login_detail).then(val => {
-            dispatch(setUser(login_detail));
-        }).catch(error => { console.log(error); alert("Please Try Again") });
+        getDoc(doc(db, "users", credential.user.uid)).then(snapshot=>{
+            if(snapshot){
+                dispatch(setUser(snapshot.data()));
+            }else{
+                setDoc(doc(db, "users", credential.user.uid), login_detail).then(val => {
+                    dispatch(setUser(login_detail));
+                }).catch(error => { console.log(error); alert("Please Try Again") });
+            }
+        });
+
 
     }).catch(error => {
         return "error";
