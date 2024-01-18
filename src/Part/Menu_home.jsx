@@ -3,12 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { set_selected_chat } from "../Redux/storeSlice";
 import { auth, db } from "../firebase";
 import { GoogleAuthProvider,signInWithPopup } from "firebase/auth";
-import { setDoc,doc, getDoc, updateDoc } from "firebase/firestore";
+import { setDoc,doc, getDoc } from "firebase/firestore";
 import { setUser } from "../Redux/storeSlice";
 
 const Menu_home=(props)=>{
     const all_available_user=useSelector(state=>state.available_user);
     const user=useSelector(state=>state.user);
+    const chatUser=useSelector(state=>state.chatlist);
     const selected_chat=useSelector(state=>state.selected_chat);
     const [user_show,setUser_show]=useState([]);
     const [search,setSearch]=useState("");
@@ -27,9 +28,12 @@ const Menu_home=(props)=>{
 
 
    const current_user_set=(id)=>{
+    let chatid="";
     var userData = all_available_user.filter(user=>user.id===id);
-    var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:userData[0].current_select_chat};
+    chatUser.forEach(chat=>{if(chat.chatId.includes(userData[0].id)){chatid=chat.chatId}})
+    var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:chatid};
     dispatch(set_selected_chat(info));
+    props.setShow(true);
    }
 
    const provider = new GoogleAuthProvider();

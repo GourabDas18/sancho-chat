@@ -22,7 +22,7 @@ const storeSlice = createSlice({
         }
         ,
         set_selected_chat: (state, action) => {
-
+            console.log("payload:   ", action.payload.current_select_chat_id)
             if(Object.keys(action.payload).length>0){
                 if(action.payload.current_select_chat_id!==undefined){
                     updateDoc(doc(db,"users",state.user.id),{
@@ -31,7 +31,7 @@ const storeSlice = createSlice({
                 }else{
                     updateDoc(doc(db,"users",state.user.id),{
                         current_select_chat:""
-                    }).catch(error=>{}).then(()=>{console.log("doc update")})
+                    }).catch(error=>{}).then(()=>{console.log("doc update blank")})
                 }
 
             }else{

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { set_chat_list, set_selected_chat } from "../Redux/storeSlice";
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
+
 
 const Menu_chats = (props) => {
     const user = useSelector(state => state.user);
@@ -17,7 +16,6 @@ const Menu_chats = (props) => {
         var unseen_no = 0;
         var i = list.length-1;
         while (i < list.length) {
-            console.log(list[i])
             if (list[i].seen == false ) {
                 if (list[i].sentBy !== user.id) {
                     unseen_no++;
@@ -62,13 +60,12 @@ const Menu_chats = (props) => {
 
 
     const current_user_set=useCallback((id)=>{
+        let chatid="";
         var userData = available_user.filter(user=>user.id===id);
-        var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:userData[0].current_select_chat};
-        console.log("dispatched");
+        chatUser.forEach(chat=>{if(chat.chatId.includes(userData[0].id)){chatid=chat.chatId}})
+        var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:chatid};
         dispatch(set_selected_chat(info));
-        console.log("dispatched done");
         props.setShow(true);
-        console.log("prop set done");
        },[available_user]) 
     return (
         <div className="p-4 py-2 w-full flex flex-col items-center">
