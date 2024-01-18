@@ -17,8 +17,9 @@ function App() {
   const [listening_chatList, setlistening_ChatList] = useState([]);
   const [show, setShow] = useState(false);
   const [height, setHeight] = useState(window.innerHeight);
+
   const localstorage_chat_save = (id) => {
-    console.log(id,"localstorage")
+    console.log(id, "localstorage")
     const idb = window.indexedDB;
     const reqest = idb.open("chatroom", 2);
 
@@ -163,70 +164,83 @@ function App() {
     onAuthStateChanged(auth, (user) => {
       if (user) {
         onSnapshot(doc(db, "users", user.uid), snapshot => {
-          dispatch(setUser(snapshot.data()));
-          var fcm_tokenlist = snapshot.data().fcm_token;
-          try {
-            getToken(messaging).then(token => {
-              let tokenlist = [...new Set([...fcm_tokenlist, token])];
-              updateDoc(doc(db, "users", user.uid), {
-                fcm_token: tokenlist
-              })
-            }).catch(error => console.log("error ----", error))
-          } catch (error) {
-            console.log(error)
+          if(snapshot){
+            dispatch(setUser(snapshot.data()));
+            var fcm_tokenlist = snapshot.data()?.fcm_token;
+            try {
+              getToken(messaging).then(token => {
+                let tokenlist = [...new Set([...fcm_tokenlist, token])];
+                updateDoc(doc(db, "users", user.uid), {
+                  fcm_token: tokenlist,
+                })
+              }).catch(error => console.log("error ----", error))
+            } catch (error) {
+              console.log(error)
+            }
+            onSnapshot(query(collection(db, "users"), limit(20)), (snapshot) => {
+              var users = [];
+              snapshot.forEach(user => {
+                users.push(user.data());
+              });
+              dispatch(set_available_user([...users.filter(eachuser => eachuser.id !== user.uid)]))
+            })
           }
+
         });
-        onSnapshot(query(collection(db, "users"), limit(20)), (snapshot) => {
-          var users = [];
-          snapshot.forEach(user => {
-            users.push(user.data());
-          });
-          dispatch(set_available_user([...users.filter(eachuser => eachuser.id !== user.uid)]))
-        })
+
       }
     })
   }, [dispatch])
 
   useEffect(() => {
-    if(Object.keys(user).length>0){
-      setlistening_ChatList([]);
-    }else{
+    if(user!==undefined){
+      if (Object.keys(user).length > 0) {
+        setlistening_ChatList([]);
+      } else {
+      }
+      let chatList = [];
+      if (Object.keys(user).length > 0) {
+        chatList = user.chatlist;
+        let remaining_chats = [...chatList.filter(chat => listening_chatList.indexOf(chat) === -1)];
+        remaining_chats.forEach(id => {
+          console.log("local storage called", id)
+          localstorage_chat_save(id)
+          setlistening_ChatList([...listening_chatList, id])
+        })
+      }
+    }
 
-    }
-    let chatList = [];
-    if(Object.keys(user).length>0){
-      chatList=user.chatlist;
-      let remaining_chats = [...chatList.filter(chat => listening_chatList.indexOf(chat) === -1)];
-      remaining_chats.forEach(id => {
-        console.log("local storage called",id)
-        localstorage_chat_save(id)
-        setlistening_ChatList([...listening_chatList, id])
-      })
-    }
   }, [user])
 
+useEffect(()=>{
   window.onblur = () => {
-    if (Object.keys(user).length > 0) {
-      updateDoc(doc(db, "users", user.id), {
-        active_status: new Date().getTime().toString()
-      })
+    if(user!==undefined){
+      if (Object.keys(user).length > 0) {
+        updateDoc(doc(db, "users", user.id), {
+          active_status: new Date().getTime().toString()
+        })
+      }
     }
   }
 
   window.onfocus = () => {
-    if (Object.keys(user).length > 0) {
-      updateDoc(doc(db, "users", user.id), {
-        active_status: "active"
-      })
+    if(user!==undefined){
+      if (Object.keys(user).length > 0) {
+        updateDoc(doc(db, "users", user.id), {
+          active_status: "active"
+        })
+      }
     }
   }
+
+},[user])
 
   window.onresize = useCallback(() => {
     setHeight(window.innerHeight)
   }, [setHeight])
 
   onMessageListener().then(payload => {
-    let notification = new Notification(payload.notification.title, { body: payload.notification.body })
+    let notification = new Notification(payload.notification.title, { body: payload.notification.body, icon: payload.data.icon })
     notification.show();
     console.log(payload);
   }).catch(err => console.log('failed: ', err));

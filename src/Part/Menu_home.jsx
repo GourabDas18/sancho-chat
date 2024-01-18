@@ -3,11 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { set_selected_chat } from "../Redux/storeSlice";
 import { auth, db } from "../firebase";
 import { GoogleAuthProvider,signInWithPopup } from "firebase/auth";
-import { setDoc,doc, getDoc } from "firebase/firestore";
+import { setDoc,doc, getDoc, updateDoc } from "firebase/firestore";
 import { setUser } from "../Redux/storeSlice";
 
 const Menu_home=(props)=>{
     const all_available_user=useSelector(state=>state.available_user);
+    const user=useSelector(state=>state.user);
     const selected_chat=useSelector(state=>state.selected_chat);
     const [user_show,setUser_show]=useState([]);
     const [search,setSearch]=useState("");
@@ -24,11 +25,12 @@ const Menu_home=(props)=>{
         }
     },[search,all_available_user])
 
-   const current_user_set=useCallback((id)=>{
+
+   const current_user_set=(id)=>{
     var userData = all_available_user.filter(user=>user.id===id);
-    var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token};
+    var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:userData[0].current_select_chat};
     dispatch(set_selected_chat(info));
-   },[all_available_user]) 
+   }
 
    const provider = new GoogleAuthProvider();
    const user_login = useCallback(async () => {
@@ -61,9 +63,10 @@ const Menu_home=(props)=>{
             {all_available_user.length>0?
             <>
             {user_show.map((user,i)=>{
-                return <section key={i} style={{backgroundImage:`url(${user.image})`}} className="w-28 h-32 bg-cover rounded-lg border-2 border-slate-200 m-6 flex justify-start items-end cursor-pointer" onClick={()=>{current_user_set(user.id);props.setShow(true);}}>
+                return <div key={i} style={{backgroundImage:`url(${user.image})`}} className="w-28 h-32 bg-cover rounded-lg border-2 border-slate-200 m-6 flex justify-start items-end cursor-pointer" onClick={()=>{current_user_set(user.id);props.setShow(true);}}>
                    <span className="text-sm text-slate-200 p-2 ">{user.name}</span> 
-                </section>
+                   {user.active_status==="active" && <span className="block bg-green-500 rounded-full absolute -right-2 w-3 h-3 -top-2 border-2 border-slate-200"></span>}
+                </div>
             })}
             
             </>

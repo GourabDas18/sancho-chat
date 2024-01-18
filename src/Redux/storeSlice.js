@@ -1,4 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
 const initialState = {
     user: {},
     available_user: [],
@@ -6,6 +8,7 @@ const initialState = {
     message_list: [],
     chatlist: []
 }
+
 
 const storeSlice = createSlice({
     name: "storeSlice",
@@ -19,7 +22,26 @@ const storeSlice = createSlice({
         }
         ,
         set_selected_chat: (state, action) => {
+
+            if(Object.keys(action.payload).length>0){
+                if(action.payload.current_select_chat_id!==undefined){
+                    updateDoc(doc(db,"users",state.user.id),{
+                        current_select_chat:action.payload.current_select_chat_id
+                    }).catch(error=>{}).then(()=>{console.log("doc update")})
+                }else{
+                    updateDoc(doc(db,"users",state.user.id),{
+                        current_select_chat:""
+                    }).catch(error=>{}).then(()=>{console.log("doc update")})
+                }
+
+            }else{
+                updateDoc(doc(db,"users",state.user.id),{
+                    current_select_chat:""  
+                }).catch(error=>{}).then(()=>{console.log("clear selection")})
+            }
             state.selected_chat = action.payload;
+            console.log("action payload done");
+       
         },
         set_chat_list: (state, action) => {
             state.chatlist = action.payload;

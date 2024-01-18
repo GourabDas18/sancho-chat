@@ -1,7 +1,8 @@
 import { addDoc, arrayUnion, collection, doc, setDoc, updateDoc } from "firebase/firestore";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { db, messaging } from "../firebase";
+import { set_selected_chat } from "../Redux/storeSlice";
 const ChatBox = (props) => {
     const current_select_chat = useSelector(state => state.selected_chat);
     const [current_select_chat_id,setCurrent_select_chat_id]=useState("");
@@ -9,7 +10,7 @@ const ChatBox = (props) => {
     const [message, setMessage] = useState("");
     const messageList = useSelector(state => state.message_list)
     const [chat, setChat] = useState([]);
-
+    const dispatch=useDispatch();
     const chatlist_check = () => {
         var id1 = user.id + current_select_chat.id;
         var id2 = current_select_chat.id + user.id;
@@ -39,7 +40,7 @@ const ChatBox = (props) => {
             })
             if (user.fcm_token.length > 0 && current_select_chat.fcm_token.length > 0) {
                 current_select_chat.fcm_token.forEach(id => {
-                    let bodyData = { "name": user.name.toString(), "message": message.toString(), "id": id };
+                    let bodyData = { "name": user.name.toString(), "message": message.toString(), "id": id, "icon": user.image };
                     var xmlrequest = new XMLHttpRequest();
                     xmlrequest.open("post", "https://sancho-chat-server.onrender.com/send");
                     xmlrequest.setRequestHeader("Content-Type", "application/json; charset=utf-8");
@@ -79,7 +80,7 @@ const ChatBox = (props) => {
                 seen: false,
                 id: docId
             }).then(val => {
-                let bodyData = { "name": user.name.toString(), "message": message.toString(), "id": current_select_chat.fcm_token.toString() };
+                let bodyData = { "name": user.name.toString(), "message": message.toString(), "id": current_select_chat.fcm_token.toString(), "icon":user.image };
                 if (user.fcm_token !== "" && current_select_chat.fcm_token !== "") {
                     var xmlrequest = new XMLHttpRequest();
                     xmlrequest.open("post", "https://sancho-chat-server.onrender.com/send");
@@ -96,35 +97,44 @@ const ChatBox = (props) => {
     }
 
     useEffect(() => {
-        if(Object.keys(user).length>0){
-            var check = chatlist_check();
-            updateDoc(doc(db,"users",user.id),{current_select_chat:current_select_chat_id}).catch(error=>{}).then(()=>{})
-            setChat([]);
-            setMessage([]);
-            messageList.forEach(item => {
-                if (item.id === current_select_chat.id + user.id || item.id === user.id + current_select_chat.id) {
-                    setChat([...item.message].reverse());
-                    chat.forEach(each_chat => {
-                        if (each_chat.seen === false && each_chat.sentBy !== user.id) {
-                            try {
-                                updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
-                            } catch (error) {
-                                console.log(error)
+        console.log("curret select chat changed")
+        if(user!==undefined){
+            if(Object.keys(user).length>0){
+                var check = chatlist_check();
+                setChat([]);
+                setMessage([]);
+                console.log("curret select chat changed")
+                messageList.forEach(item => {
+                    if (item.id === user.current_select_chat) {
+                        setChat([...item.message].reverse());
+                        console.log("current chat set")
+                        chat.forEach(each_chat => {
+                            if (each_chat.seen === false && each_chat.sentBy !== user.id) {
+                                try {
+                                    updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
+                                } catch (error) {
+                                    console.log(error)
+                                }
+        
                             }
-    
-                        }
-                    })
-                }
-            })
+                        })
+                    }
+                })
+            }
         }
-    }, [current_select_chat])
+
+    }, [current_select_chat,user])
 
     useEffect(()=>{
+        console.log("new message to chage")
         messageList.forEach(item => {
-            if (item.id === current_select_chat.id + user.id || item.id === user.id + current_select_chat.id) {
+            console.log(item.id)
+            if (item.id === user.current_select_chat) {
+                console.log("new get to chage")
                 setChat([...item.message].reverse());
-                chat.forEach(each_chat => {
+                [...item.message].forEach(each_chat => {
                     if (each_chat.seen === false && each_chat.sentBy !== user.id) {
+                        console.log("trying to chage")
                         try {
                             updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
                         } catch (error) {
@@ -159,12 +169,12 @@ const ChatBox = (props) => {
             {Object.keys(current_select_chat).length > 0
                 ? <>
                     <section className="flex flex-row items-center w-full bg-slate-900">
-                        <span onClick={() => { props.setShow(false) }}><i className="fi fi-br-angle-small-left text-md text-slate-400 m-2 hidden md:block"></i></span>
+                        <span onClick={() => { props.setShow(false);dispatch(set_selected_chat({})) }}><i className="fi fi-br-angle-small-left text-md text-slate-400 m-2 hidden md:block"></i></span>
                         <section className=" w-full min-h-[8%] max-h-[8%] flex flex-row justify-between items-center px-2 py-4" >
                             <span className="flex flex-col items-center gap-1 w-[95%]">
                                 <span className="text-sm font-semibold text-slate-200">{current_select_chat.name}</span>
                                 <span className="text-xs text-slate-400">
-                                    {current_select_chat.typing===true && current_select_chat.current_select_chat_id===current_select_chat_id?
+                                    {current_select_chat.typing===true && current_select_chat.current_select_chat_id=== current_select_chat_id?
                                 <>{current_select_chat.last_seen === "active" ? "typing..." : ` Last seen : ${new Date().toLocaleDateString() === new Date(current_select_chat.last_seen).toLocaleDateString() ? new Date(parseInt(current_select_chat.last_seen)).toLocaleDateString() : new Date(parseInt(current_select_chat.last_seen)).toLocaleTimeString()}`}</>
                                 :<>{current_select_chat.last_seen === "active" ? "Active Now" : ` Last seen : ${new Date().toLocaleDateString() === new Date(current_select_chat.last_seen).toLocaleDateString() ? new Date(parseInt(current_select_chat.last_seen)).toLocaleDateString() : new Date(parseInt(current_select_chat.last_seen)).toLocaleTimeString()}`}</>    
                                 }

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { set_chat_list, set_selected_chat } from "../Redux/storeSlice";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const Menu_chats = (props) => {
     const user = useSelector(state => state.user);
@@ -12,22 +14,20 @@ const Menu_chats = (props) => {
     const [search, setSearch] = useState("");
     const dispatch = useDispatch();
     const new_message_count= useCallback((list,i)=>{
-        var unseen_no=0;
-        var last_unseen="";
-        var last_unseen_set=false;
-        var i =list.length-1;
-        while (i>=0) {
-            if(list[i].b==false){
-                if(!last_unseen_set){
-                    last_unseen_set=true;
-                    last_unseen=list[i].a;
+        var unseen_no = 0;
+        var i = list.length-1;
+        while (i < list.length) {
+            console.log(list[i])
+            if (list[i].seen == false ) {
+                if (list[i].sentBy !== user.id) {
+                    unseen_no++;
                 };
-                unseen_no++;
-            }else{
+                i--;
+            } else {
                 return unseen_no;
             }
-            i--;
         }
+        return unseen_no;
     },[])
     useEffect(() => {
         let chat_collection = [];
@@ -63,8 +63,12 @@ const Menu_chats = (props) => {
 
     const current_user_set=useCallback((id)=>{
         var userData = available_user.filter(user=>user.id===id);
-        var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token};
+        var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:userData[0].current_select_chat};
+        console.log("dispatched");
         dispatch(set_selected_chat(info));
+        console.log("dispatched done");
+        props.setShow(true);
+        console.log("prop set done");
        },[available_user]) 
     return (
         <div className="p-4 py-2 w-full flex flex-col items-center">
@@ -76,7 +80,7 @@ const Menu_chats = (props) => {
                 {chatUser.length > 0 ?
                     <>
                         {chatUser.map((user, i) => {
-                            return <span className="w-full my-2 p-2 bg-slate-600 rounded-t-2xl rounded-b-2xl shadow-md rounded-tl-none" key={i} onClick={()=>{current_user_set(user.id);props.setShow(true);}}>
+                            return <span className="w-full my-2 p-2 bg-slate-600 rounded-t-2xl rounded-b-2xl shadow-md rounded-tl-none" key={i} onClick={()=>{current_user_set(user.id);}}>
                                 <section className="flex flex-row gap-2 mb-2 relative items-center">
                                     <img src={user.image} alt={user.name} className=" w-12 h-12 rounded-full border-2 shadow-md" />
                                     <span className="flex flex-col items-start w-full">
