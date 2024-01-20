@@ -55,8 +55,7 @@ function App() {
                 var message_time = lastmessage.time;
                 onSnapshot(query(collection(db, "chatroom-message", id, "messages"), where("time", ">=", message_time), orderBy("time", "desc")), snapshot => {
                   let allmessageData = [];
-                  console.log("{id:id,message:allmessageData} have chat", { id: id, message: allmessageData })
-                  snapshot.forEach(snap => allmessageData.push(snap.data()))
+                 snapshot.forEach(snap => allmessageData.push(snap.data()))
                   dispatch(set_message_list({ id: id, message: allmessageData }));
                   update_localdb({ id: id, message: allmessageData });
                 })
@@ -203,7 +202,6 @@ function App() {
         chatList = user.chatlist;
         let remaining_chats = [...chatList.filter(chat => listening_chatList.indexOf(chat) === -1)];
         remaining_chats.forEach(id => {
-          console.log("local storage called", id)
           localstorage_chat_save(id)
           setlistening_ChatList([...listening_chatList, id])
         })

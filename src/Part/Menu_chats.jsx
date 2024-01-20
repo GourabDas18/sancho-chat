@@ -16,12 +16,15 @@ const Menu_chats = (props) => {
         var unseen_no = 0;
         var i = list.length-1;
         while (i < list.length) {
-            if (list[i].seen == false ) {
-                if (list[i].sentBy !== user.id) {
-                    unseen_no++;
-                };
-                i--;
-            } else {
+            if(list[i]!==undefined){
+                if (list[i].seen == false ) {
+                    if (list[i].sentBy !== user.id) {
+                        unseen_no++;
+                    };
+                    i--;
+                }
+            }
+ else {
                 return unseen_no;
             }
         }
@@ -58,7 +61,6 @@ const Menu_chats = (props) => {
         }
     },[search,chatlistinfo])
 
-
     const current_user_set=useCallback((id)=>{
         let chatid="";
         var userData = available_user.filter(user=>user.id===id);
@@ -66,7 +68,7 @@ const Menu_chats = (props) => {
         var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:chatid};
         dispatch(set_selected_chat(info));
         props.setShow(true);
-       },[available_user]) 
+       },[available_user,chatUser]) 
     return (
         <div className="p-4 py-2 w-full flex flex-col items-center">
             <section className="bg-slate-800 w-[80%] flex justify-evenly items-center">

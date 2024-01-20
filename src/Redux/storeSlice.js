@@ -23,21 +23,25 @@ const storeSlice = createSlice({
         ,
         set_selected_chat: (state, action) => {
             console.log("payload:   ", action.payload.current_select_chat_id)
+            console.log("setting user one time--------------------")
             if(Object.keys(action.payload).length>0){
-                if(action.payload.current_select_chat_id!==undefined){
+                if(action.payload.current_select_chat_id!==undefined && state.user.current_select_chat !==action.payload.current_select_chat_id){
                     updateDoc(doc(db,"users",state.user.id),{
                         current_select_chat:action.payload.current_select_chat_id
                     }).catch(error=>{}).then(()=>{console.log("doc update")})
                 }else{
-                    updateDoc(doc(db,"users",state.user.id),{
-                        current_select_chat:""
-                    }).catch(error=>{}).then(()=>{console.log("doc update blank")})
+                    if(state.user.current_select_chat !== ""){
+                        updateDoc(doc(db,"users",state.user.id),{
+                            current_select_chat:""
+                        }).catch(error=>{}).then(()=>{console.log("doc update blank")})
+                    }
                 }
-
             }else{
-                updateDoc(doc(db,"users",state.user.id),{
-                    current_select_chat:""  
-                }).catch(error=>{}).then(()=>{console.log("clear selection")})
+                if(Object.keys(state.user).length>0){
+                    updateDoc(doc(db,"users",state.user.id),{
+                        current_select_chat:""  
+                    }).catch(error=>{}).then(()=>{console.log("clear selection")})
+                }
             }
             state.selected_chat = action.payload;
             console.log("action payload done");

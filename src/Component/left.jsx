@@ -31,19 +31,18 @@ const Left = (props) => {
         message_list.forEach(list => {
             no += new_message_count(list.message);
         })
-        setnew_message(no);console.log("unread message",no)
-    }, [message_list])
+        setnew_message(no);
+    }, [message_list,user])
 
     const new_message_count = useCallback((list) => {
         var unseen_no = 0;
         var i = list.length-1;
         while (i < list.length) {
-            console.log(list[i])
-            if (list[i].seen == false ) {
-                if (list[i].sentBy !== user.id) {
-                    unseen_no++;
-                };
-                i--;
+            if(list[i]!==undefined){
+                if (list[i].seen === false && list[i].sentBy !== user.id) {
+                        unseen_no++;       
+            }
+            i--;
             } else {
                 return unseen_no;
             }
@@ -65,6 +64,11 @@ const Left = (props) => {
         }
     }
 
+    useEffect(()=>{
+        if(user.current_select_chat !== ""){
+            dispatch(set_selected_chat({}))
+        }
+    },[menu])
 
     return (
         <div className={`flex flex-col w-[35%] md:w-screen z-10 md:relative bg-slate-800 min-h-full ${props.show == false ? "md:translate-x-0" : "md:translate-x-full"}`}>
@@ -82,8 +86,8 @@ const Left = (props) => {
                     }
 
                     <span className="flex flex-col gap-10 text-lg text-slate-300 items-center">
-                        <i className={`fi fi-ss-home hover:text-slate-500 cursor-pointer ${menu === "home" ? "px-3 py-2 bg-slate-800 rounded-full" : ""}`} onClick={() => { setMenu("home"); dispatch(set_selected_chat({}));  }}></i>
-                        <i className={`fi fi-sr-comment hover:text-slate-500 cursor-pointer ${menu === "chats" ? "px-3 py-2 bg-slate-800 rounded-full" : ""}`} onClick={() => { setMenu("chats");; dispatch(set_selected_chat({})); }}><span className="text-sm text-yellow-300 font-semibold absolute">{new_message > 0 ? new_message : ""}</span></i>
+                        <i className={`fi fi-ss-home hover:text-slate-500 cursor-pointer ${menu === "home" ? "px-3 py-2 bg-slate-800 rounded-full" : ""}`} onClick={() => { setMenu("home")  }}></i>
+                        <i className={`fi fi-sr-comment hover:text-slate-500 cursor-pointer ${menu === "chats" ? "px-3 py-2 bg-slate-800 rounded-full" : ""}`} onClick={() => { setMenu("chats"); }}><span className="text-sm text-yellow-300 font-semibold absolute">{new_message > 0 ? new_message : ""}</span></i>
                         <i className={`fi fi-ss-users-medical hover:text-slate-500 cursor-pointer ${menu === "" ? "px-3 py-2 bg-slate-800 rounded-full" : ""}`}></i>
                     </span>
                     <span className="w-12 h-12 bg-slate-700 rounded-full flex justify-center items-center">

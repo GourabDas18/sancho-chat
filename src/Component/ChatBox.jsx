@@ -31,9 +31,10 @@ const ChatBox = (props) => {
         if (!haveChat.status) {
             var timestamp = new Date().getTime();
             let tokenlist = [user.fcm_token, current_select_chat.fcm_token];
-
+            var info = {name:current_select_chat.name,image:current_select_chat.image,id:current_select_chat.id,last_seen:current_select_chat.last_seen,fcm_token:current_select_chat.fcm_token,typing:current_select_chat.typing,current_select_chat_id:id1};
+            dispatch(set_selected_chat(info))
             updateDoc(doc(db, "users", `${user.id}`), {
-                chatlist: arrayUnion(id1.toString())
+                chatlist: arrayUnion(id1.toString()),
             })
             updateDoc(doc(db, "users", `${current_select_chat.id}`), {
                 chatlist: arrayUnion(id1.toString())
@@ -69,6 +70,7 @@ const ChatBox = (props) => {
             })
         } else {
             var timestamp = new Date().getTime();
+            dispatch(set_selected_chat({current_select_chat_id : current_select_chat_id}))
             updateDoc(doc(db, "chatroom-info", haveChat.id), {
                 last_update: timestamp
             })
@@ -97,17 +99,14 @@ const ChatBox = (props) => {
     }
 
     useEffect(() => {
-        console.log("curret select chat changed")
         if(user!==undefined){
             if(Object.keys(user).length>0){
                 var check = chatlist_check();
                 setChat([]);
                 setMessage([]);
-                console.log("curret select chat changed")
                 messageList.forEach(item => {
                     if (item.id === user.current_select_chat) {
                         setChat([...item.message].reverse());
-                        console.log("current chat set")
                         chat.forEach(each_chat => {
                             if (each_chat.seen === false && each_chat.sentBy !== user.id) {
                                 try {
@@ -165,12 +164,12 @@ const ChatBox = (props) => {
     }
 
     return (
-        <div className={`w-full h-full`}>
+        <div className={`w-full h-full flex flex-col`}>
             {Object.keys(current_select_chat).length > 0
                 ? <>
                     <section className="flex flex-row items-center w-full bg-slate-900">
-                        <span onClick={() => { props.setShow(false);dispatch(set_selected_chat({})) }}><i className="fi fi-br-angle-small-left text-md text-slate-400 m-2 hidden md:block"></i></span>
-                        <section className=" w-full min-h-[8%] max-h-[8%] flex flex-row justify-between items-center px-2 py-4" >
+                        <span onClick={() => { props.setShow(false);dispatch(set_selected_chat({}));console.log("back click called once") }}><i className="fi fi-br-angle-small-left text-md text-slate-400 m-2 hidden md:block"></i></span>
+                        <section className=" w-full min-h-[8vh] max-h-[8vh] flex flex-row justify-between items-center px-2 py-4" >
                             <span className="flex flex-col items-center gap-1 w-[95%]">
                                 <span className="text-sm font-semibold text-slate-200">{current_select_chat.name}</span>
                                 <span className="text-xs text-slate-400">
@@ -186,8 +185,8 @@ const ChatBox = (props) => {
                         </section>
                     </section>
 
-                    <section className={"h-full"}>
-                        <section className={` flex flex-col-reverse items-end min-h-[86%] max-h-[86%] overflow-x-hidden w-full p-4 `}>
+                    <section className={"h-full flex flex-col grow"}>
+                        <section className={` flex flex-col-reverse items-end min-h-[93%] max-h-[93%] overflow-x-hidden w-full p-4 `}>
                             {chat.map((each_chat, i) => {
                                 return <>
                                     {i !== chat.length - 1 && i !== 0 && date_divider(chat[i - 1].time, chat[i].time)}
@@ -218,7 +217,7 @@ const ChatBox = (props) => {
                                 </>
                             })}
                         </section>
-                        <span className="flex flex-row justify-evenly items-center min-h-[5%] max-h-[5%] ">
+                        <span className="flex flex-row justify-evenly items-center min-h-[6%] max-h-[6%] ">
                             <i className="fi fi fi-rs-grin text-lg w-10 h-10 p-2 flex justify-center items-center bg-rose-600 text-white rounded-full md:hidden"></i>
                             <input type="text" className="w-4/5 h-10 pl-2.5 bg-white border-0 focus:outline-0 rounded-full" placeholder="hi !! enter your message ." value={message} onChange={(e) => { setMessage(e.target.value) }} onFocus={()=>{user_typing()}} onBlur={()=>{user_not_typing()}}/>
                             <span onClick={() => { if(message!==""){sendMessage()} }} onKeyUp={(e)=>{if(e.keyCode===13 && message!==""){sendMessage()}}}><i className="fi fi-rs-paper-plane text-lg w-10 h-10 p-2 flex justify-center items-center bg-sky-900 text-white rounded-full"></i></span>
