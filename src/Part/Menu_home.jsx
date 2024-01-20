@@ -35,25 +35,28 @@ const Menu_home=(props)=>{
         return unseen_no;
     },[])
     useEffect(() => {
-        let chat_collection = [];
-        if(Object.keys(user).length>0){
-            user.chatlist.forEach(chat => {
-                all_available_user.forEach(user => {
-                    if (chat.includes(user.id)) {
-                        chat_collection.push({ name: user.name, id: user.id, chatId: chat, image: user.image, last_seen: user.active_status, message: [], newMessage : 0 })
+        if(user!==undefined){ 
+            let chat_collection = [];
+            if(Object.keys(user).length>0){
+                user.chatlist.forEach(chat => {
+                    all_available_user.forEach(user => {
+                        if (chat.includes(user.id)) {
+                            chat_collection.push({ name: user.name, id: user.id, chatId: chat, image: user.image, last_seen: user.active_status, message: [], newMessage : 0 })
+                        }
+                    })
+                });
+            }
+            chat_collection.forEach(chat => {
+                message_list.forEach(item => {
+                    if (item.id === chat.chatId) {
+                        chat.message = item.message[item.message.length-1];
+                        chat.newMessage = new_message_count(item.message,1);
                     }
                 })
             });
+            dispatch(set_chat_list([...chat_collection]));
         }
-        chat_collection.forEach(chat => {
-            message_list.forEach(item => {
-                if (item.id === chat.chatId) {
-                    chat.message = item.message[item.message.length-1];
-                    chat.newMessage = new_message_count(item.message,1);
-                }
-            })
-        });
-        dispatch(set_chat_list([...chat_collection]));
+
     }, [user, message_list, all_available_user])
 
 
@@ -82,13 +85,14 @@ const Menu_home=(props)=>{
    const provider = new GoogleAuthProvider();
    const user_login = useCallback(async () => {
     signInWithPopup(auth, provider).then((credential) => {
-        var login_detail = { id: credential.user.uid, name: credential.user.displayName, mail: credential.user.email, chatlist: [], image: credential.user.photoURL, active_status: "active",fcm_token:"" }
+        var login_detail = { id: credential.user.uid, name: credential.user.displayName, mail: credential.user.email, chatlist: [], image: credential.user.photoURL, active_status: "active",fcm_token:"",current_select_chat:"" }
         getDoc(doc(db, "users", credential.user.uid)).then(snapshot=>{
-            if(snapshot){
+            if(snapshot.data()){
                 dispatch(setUser(snapshot.data()));
+                alert("Login Successfull")
             }else{
                 setDoc(doc(db, "users", credential.user.uid), login_detail).then(val => {
-                    dispatch(setUser(login_detail));
+                    dispatch(setUser(login_detail)); alert("Login Successfull")
                 }).catch(error => { console.log(error); alert("Please Try Again") });
             }
         });
@@ -107,7 +111,7 @@ const Menu_home=(props)=>{
             <input type="search" onChange={e=>setSearch(e.target.value)} className="w-[90%] bg-slate-900 text-slate-400 border-0 rounded-full focus:outline-none p-3"/>
             </section>
              <span className="py-2 flex flex-wrap">
-            {all_available_user.length>0?
+            {auth.currentUser?
             <>
             {user_show.map((user,i)=>{
                 return <div key={i} style={{backgroundImage:`url(${user.image})`}} className="w-28 h-32 bg-cover rounded-lg border-2 border-slate-200 m-6 flex justify-start items-end cursor-pointer" onClick={()=>{current_user_set(user.id);props.setShow(true);}}>
