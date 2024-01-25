@@ -129,6 +129,7 @@ const ChatBox = (props) => {
                         chat.forEach(each_chat => {
                             if (each_chat.seen === false && each_chat.sentBy !== user.id) {
                                 try {
+                                    console.log("seen set true----------------------------------------- current chat user")
                                     updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
                                 } catch (error) {
                                     console.log(error)
@@ -158,6 +159,7 @@ const ChatBox = (props) => {
                 [...item.message].forEach(each_chat => {
                     if (each_chat.seen === false && each_chat.sentBy !== user.id) {
                         try {
+                            console.log("seen set true----------------------------------------- messagelist")
                             updateDoc(doc(db, "chatroom-message", item.id, "messages", each_chat.id), { seen: true })
                         } catch (error) {
                             console.log(error)

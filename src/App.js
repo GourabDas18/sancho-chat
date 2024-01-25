@@ -175,7 +175,8 @@ function App() {
         });
         dispatch(set_available_user([...users.filter(eachuser => eachuser.id !== user.uid)]))
       });
-      var fcm_tokenlist = user.fcm_token;
+      var fcm_tokenlist;
+      user.fcm_token===""?fcm_tokenlist=[]:fcm_tokenlist=user.fcm_token;
       try {
         getToken(messaging).then(token => {
           if(fcm_tokenlist.indexOf(token)===-1){
@@ -210,6 +211,7 @@ function App() {
         })
       }
     }
+    
 
     window.onblur = () => {
       if(user!==undefined){
@@ -220,7 +222,8 @@ function App() {
             typing:false,
             current_select_chat:""
           }).then(()=>{
-            dispatch(set_selected_chat({}))
+            dispatch(set_selected_chat({}));
+            setShow(false);
           })
         }
       }

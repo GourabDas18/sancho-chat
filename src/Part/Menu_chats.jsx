@@ -14,9 +14,9 @@ const Menu_chats = (props) => {
     const dispatch = useDispatch();
     const new_message_count= useCallback((list,i)=>{
         var unseen_no = 0;
-        var i = 0;
+        var i = list.length-1;
         console.log(list)
-        while (i < list.length) {
+        while (i >=0 ) {
             if(list[i]!==undefined){
                 if (list[i].seen == false ) {
                     if (list[i].sentBy !== user.id) {
@@ -27,7 +27,7 @@ const Menu_chats = (props) => {
         else {
                 return unseen_no;
             }
-            i++;
+            i--;
         }
         return unseen_no;
     },[])

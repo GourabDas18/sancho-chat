@@ -36,16 +36,19 @@ const Left = (props) => {
 
     const new_message_count = useCallback((list) => {
         var unseen_no = 0;
-        var i = 0;
-        while (i < list.length) {
+        var i = list.length-1;
+        while (i >=0 ) {
             if(list[i]!==undefined){
-                if (list[i].seen === false && list[i].sentBy !== user.id) {
-                        unseen_no++;       
+                if (list[i].seen == false ) {
+                    if (list[i].sentBy !== user.id) {
+                        unseen_no++;
+                    };
+                }
             }
-            i++;
-            } else {
+        else {
                 return unseen_no;
             }
+            i--;
         }
         return unseen_no;
     }, [])
