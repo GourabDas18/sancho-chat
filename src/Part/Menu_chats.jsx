@@ -14,19 +14,20 @@ const Menu_chats = (props) => {
     const dispatch = useDispatch();
     const new_message_count= useCallback((list,i)=>{
         var unseen_no = 0;
-        var i = list.length-1;
+        var i = 0;
+        console.log(list)
         while (i < list.length) {
             if(list[i]!==undefined){
                 if (list[i].seen == false ) {
                     if (list[i].sentBy !== user.id) {
                         unseen_no++;
                     };
-                    i--;
                 }
             }
- else {
+        else {
                 return unseen_no;
             }
+            i++;
         }
         return unseen_no;
     },[])
@@ -66,7 +67,7 @@ const Menu_chats = (props) => {
         var userData = available_user.filter(user=>user.id===id);
         chatUser.forEach(chat=>{if(chat.chatId.includes(userData[0].id)){chatid=chat.chatId}})
         var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:chatid};
-        dispatch(set_selected_chat(info));
+        dispatch(set_selected_chat({type:"self",data:info}));
         props.setShow(true);
        },[available_user,chatUser]) 
     return (

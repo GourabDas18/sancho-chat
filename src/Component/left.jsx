@@ -36,13 +36,13 @@ const Left = (props) => {
 
     const new_message_count = useCallback((list) => {
         var unseen_no = 0;
-        var i = list.length-1;
+        var i = 0;
         while (i < list.length) {
             if(list[i]!==undefined){
                 if (list[i].seen === false && list[i].sentBy !== user.id) {
                         unseen_no++;       
             }
-            i--;
+            i++;
             } else {
                 return unseen_no;
             }
@@ -65,9 +65,7 @@ const Left = (props) => {
     }
 
     useEffect(()=>{
-        if(user.current_select_chat !== ""){
-            dispatch(set_selected_chat({}))
-        }
+        dispatch(set_selected_chat({}));
     },[menu])
 
     return (

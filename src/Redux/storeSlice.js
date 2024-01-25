@@ -16,41 +16,51 @@ const storeSlice = createSlice({
     reducers: {
         setUser: (state, action) => {
             state.user = action.payload;
+            console.log('user update');
         },
         set_available_user: (state, action) => {
             state.available_user = action.payload;
+            console.log("available")
         }
         ,
         set_selected_chat: (state, action) => {
-            console.log("payload:   ", action.payload.current_select_chat_id)
             console.log("setting user one time--------------------")
             if(Object.keys(action.payload).length>0){
-                if(action.payload.current_select_chat_id!==undefined && state.user.current_select_chat !==action.payload.current_select_chat_id){
-                    updateDoc(doc(db,"users",state.user.id),{
-                        current_select_chat:action.payload.current_select_chat_id
-                    }).catch(error=>{}).then(()=>{console.log("doc update")})
-                }else{
-                    if(state.user.current_select_chat !== ""){
-                        updateDoc(doc(db,"users",state.user.id),{
-                            current_select_chat:""
-                        }).catch(error=>{}).then(()=>{console.log("doc update blank")})
-                    }
+                if(action.payload.type==="self"){
+                    
+                        if(action.payload.data.current_select_chat_id!==undefined && state.user.current_select_chat !==action.payload.data.current_select_chat_id){
+                            updateDoc(doc(db,"users",state.user.id),{
+                                current_select_chat:action.payload.data.current_select_chat_id
+                            }).catch(error=>{}).then(()=>{console.log("doc update")})
+                        }else{
+                            if(state.user.current_select_chat !== ""){
+                                updateDoc(doc(db,"users",state.user.id),{
+                                    current_select_chat:""
+                                }).catch(error=>{}).then(()=>{console.log("doc update blank")})
+                            }
+                        }
+                    
                 }
+    
+                state.selected_chat = action.payload.data;
             }else{
                 if(Object.keys(state.user).length>0){
+                    state.selected_chat={}
                     updateDoc(doc(db,"users",state.user.id),{
                         current_select_chat:""  
                     }).catch(error=>{}).then(()=>{console.log("clear selection")})
                 }
             }
-            state.selected_chat = action.payload;
+
             console.log("action payload done");
        
         },
         set_chat_list: (state, action) => {
             state.chatlist = action.payload;
+            console.log("chatlist")
         },
         set_message_list: (state, action) => {
+            console.log("message list set")
             const { id, message } = action.payload;
             let haveMessage = false;
             state.message_list.forEach(element => {

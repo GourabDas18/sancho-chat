@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux";
-import { set_selected_chat, set_chat_list } from "../Redux/storeSlice";
+import { set_selected_chat, set_chat_list ,setUser} from "../Redux/storeSlice";
 import { auth, db } from "../firebase";
 import { GoogleAuthProvider,signInWithPopup } from "firebase/auth";
 import { setDoc,doc, getDoc } from "firebase/firestore";
-import { setUser } from "../Redux/storeSlice";
 
 const Menu_home=(props)=>{
     const all_available_user=useSelector(state=>state.available_user);
@@ -16,24 +15,25 @@ const Menu_home=(props)=>{
     const [search,setSearch]=useState("");
     const dispatch = useDispatch();
 
-    const new_message_count= useCallback((list,i)=>{
+    const new_message_count= (list,i)=>{
         var unseen_no = 0;
         var i = list.length-1;
+        console.log(list)
         while (i < list.length) {
             if(list[i]!==undefined){
                 if (list[i].seen == false ) {
                     if (list[i].sentBy !== user.id) {
                         unseen_no++;
                     };
-                    i--;
                 }
             }
         else {
                 return unseen_no;
             }
+            i++;
         }
         return unseen_no;
-    },[])
+    }
     useEffect(() => {
         if(user!==undefined){ 
             let chat_collection = [];
@@ -48,16 +48,17 @@ const Menu_home=(props)=>{
             }
             chat_collection.forEach(chat => {
                 message_list.forEach(item => {
-                    if (item.id === chat.chatId) {
+                    if (item.id.includes(chat.id)) {
                         chat.message = item.message[item.message.length-1];
                         chat.newMessage = new_message_count(item.message,1);
                     }
                 })
             });
-            dispatch(set_chat_list([...chat_collection]));
+            
+             dispatch(set_chat_list([...chat_collection]));
         }
 
-    }, [user, message_list, all_available_user])
+    }, [user,all_available_user,message_list])
 
 
     useEffect(()=>{
@@ -71,14 +72,11 @@ const Menu_home=(props)=>{
 
 
    const current_user_set=(id)=>{
-    console.log("getting id",id)
-    console.log("available user",all_available_user)
     let chatid="";
     var userData = all_available_user.filter(user=>user.id===id);
     chatUser.forEach(chat=>{if(chat.chatId.includes(userData[0].id)){chatid=chat.chatId}})
     var info = {name:userData[0].name,image:userData[0].image,id:userData[0].id,last_seen:userData[0].active_status,fcm_token:userData[0].fcm_token,typing:userData[0].typing,current_select_chat_id:chatid};
-    console.log("dispatch id",chatid)
-    dispatch(set_selected_chat(info));
+    dispatch(set_selected_chat({type:"self",data:info}));
     props.setShow(true);
    }
 
@@ -102,6 +100,7 @@ const Menu_home=(props)=>{
         return "error";
     });
 }, [dispatch, setUser])
+
 
     return(
         <div className="p-4 py-2 w-full flex flex-col items-center">

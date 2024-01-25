@@ -8,7 +8,7 @@ import { auth, db, messaging, onMessageListener } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, limit, onSnapshot, query, updateDoc, orderBy, where } from 'firebase/firestore';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser, set_available_user, set_message_list } from './Redux/storeSlice';
+import { setUser, set_available_user, set_message_list, set_selected_chat } from './Redux/storeSlice';
 import { getToken } from 'firebase/messaging';
 function App() {
   const dispatch = useDispatch();
@@ -22,7 +22,6 @@ function App() {
     console.log(id, "localstorage")
     const idb = window.indexedDB;
     const reqest = idb.open("chatroom", 2);
-
     reqest.onupgradeneeded = () => {
       const localdb = reqest.result;
       localdb.createObjectStore("message_list", { autoIncrement: true, keyPath: "id" });
@@ -49,10 +48,11 @@ function App() {
             const cursor = openingcursor.result;
             if (cursor) {
               if (cursor.value.id === id) {
-                dispatch(set_message_list({ id: cursor.value.id, message: cursor.value.message }));
+                // dispatch(set_message_list({ id: cursor.value.id, message: cursor.value.message }));
                 var messagelist = cursor.value.message;
                 var lastmessage = messagelist[messagelist.length - 1];
                 var message_time = lastmessage.time;
+                dispatch(set_message_list({ id: id, message: messagelist }));
                 onSnapshot(query(collection(db, "chatroom-message", id, "messages"), where("time", ">=", message_time), orderBy("time", "desc")), snapshot => {
                   let allmessageData = [];
                  snapshot.forEach(snap => allmessageData.push(snap.data()))
@@ -159,37 +159,40 @@ function App() {
     }
   }
   useEffect(() => { setHeight(window.innerHeight); }, [window.innerHeight])
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        onSnapshot(doc(db, "users", user.uid), snapshot => {
-          if(snapshot){
-            dispatch(setUser(snapshot.data()));
-            var fcm_tokenlist = snapshot.data()?.fcm_token;
-            try {
-              getToken(messaging).then(token => {
-                let tokenlist = [...new Set([...fcm_tokenlist, token])];
-                updateDoc(doc(db, "users", user.uid), {
-                  fcm_token: tokenlist,
-                })
-              }).catch(error => console.log("error ----", error))
-            } catch (error) {
-              console.log(error)
-            }
-            onSnapshot(query(collection(db, "users"), limit(20)), (snapshot) => {
-              var users = [];
-              snapshot.forEach(user => {
-                users.push(user.data());
-              });
-              dispatch(set_available_user([...users.filter(eachuser => eachuser.id !== user.uid)]))
+ useEffect(()=>{
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      onSnapshot(doc(db, "users", user.uid), snapshot => {
+        if(snapshot){
+          dispatch(setUser(snapshot.data()));
+          console.log("user update from app")
+        }
+      });
+      onSnapshot(query(collection(db, "users"), limit(20)), (snapshot) => {
+        var users = [];
+        snapshot.forEach(user => {
+          users.push(user.data());
+        });
+        dispatch(set_available_user([...users.filter(eachuser => eachuser.id !== user.uid)]))
+      });
+      var fcm_tokenlist = user.fcm_token;
+      try {
+        getToken(messaging).then(token => {
+          if(fcm_tokenlist.indexOf(token)===-1){
+            let tokenlist = [...new Set([...fcm_tokenlist, token])];
+            updateDoc(doc(db, "users", user.uid), {
+              fcm_token: tokenlist,
             })
           }
+        }).catch(error => console.log("error ----", error))
+      } catch (error) {
+        console.log(error)
+      } 
 
-        });
+    }
 
-      }
-    })
-  }, [dispatch])
+  })
+ },[])
 
   useEffect(() => {
     if(user!==undefined){
@@ -208,30 +211,32 @@ function App() {
       }
     }
 
+    window.onblur = () => {
+      if(user!==undefined){
+        dispatch(set_selected_chat({}))
+        if (Object.keys(user).length > 0) {
+          updateDoc(doc(db, "users", user.id), {
+            active_status: new Date().getTime().toString(),
+            typing:false,
+            current_select_chat:""
+          }).then(()=>{
+            dispatch(set_selected_chat({}))
+          })
+        }
+      }
+    }
+  
+    window.onfocus = () => {
+      if(user!==undefined){
+        if (Object.keys(user).length > 0) {
+          updateDoc(doc(db, "users", user.id), {
+            active_status: "active"
+          })
+        }
+      }
+    }
+
   }, [user])
-
-useEffect(()=>{
-  window.onblur = () => {
-    if(user!==undefined){
-      if (Object.keys(user).length > 0) {
-        updateDoc(doc(db, "users", user.id), {
-          active_status: new Date().getTime().toString()
-        })
-      }
-    }
-  }
-
-  window.onfocus = () => {
-    if(user!==undefined){
-      if (Object.keys(user).length > 0) {
-        updateDoc(doc(db, "users", user.id), {
-          active_status: "active"
-        })
-      }
-    }
-  }
-
-},[user])
 
   window.onresize = useCallback(() => {
     setHeight(window.innerHeight)
